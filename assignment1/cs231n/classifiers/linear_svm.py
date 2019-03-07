@@ -35,12 +35,17 @@ def svm_loss_naive(W, X, y, reg):
       if margin > 0:
         loss += margin
 
+        dW[:, j] += X[i, :].T
+        dW[:, y[i]] += -X[i, :].T
+
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
+  dW /= num_train
 
   # Add regularization to the loss.
-  loss += reg * np.sum(W * W)
+  loss += 0.5 * reg * np.sum(W * W)
+  dW += reg * W
 
   #############################################################################
   # TODO:                                                                     #
@@ -69,7 +74,17 @@ def svm_loss_vectorized(W, X, y, reg):
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  pass
+  # L = 1/N * sum_i sum_j!=yi (MAX(XW - XWy + 1)) + reg * ||W||^2
+  scores = X.dot(W)
+  num_train = X.shape[0]
+  # 将 scores 重构，把每一行 X 的 scores 中对应的分类的分数取出来，并整理成列向量
+  correct_class_score = scores[np.arange(num_train), y].reshape(-1, 1)
+  # 计算 margin, 并清除正确分类上的 margin
+  margins = np.maximum(0, scores - correct_class_score + 1)
+  margins[np.arange(num_train), y] = 0
+  # 计算损失
+  loss += np.sum(margins) / num_train
+  loss += 0.5 * reg * np.sum(W * W)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -84,7 +99,15 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+  # 记录下大于0的margin
+  margins = (margins > 0) * 1
+  # 需要减去 j=y[i] 时的 xi
+  row_sum = np.sum(margins,axis=1)
+  margins[np.arange(num_train),y] = -row_sum
+  # 计算梯度
+  dW = np.dot(X.T, margins)
+  dW /= num_train
+  dW += reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################

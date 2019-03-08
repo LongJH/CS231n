@@ -44,8 +44,8 @@ def svm_loss_naive(W, X, y, reg):
   dW /= num_train
 
   # Add regularization to the loss.
-  loss += 0.5 * reg * np.sum(W * W)
-  dW += reg * W
+  loss += reg * np.sum(W * W)
+  dW += reg * W * 2
 
   #############################################################################
   # TODO:                                                                     #
@@ -84,7 +84,7 @@ def svm_loss_vectorized(W, X, y, reg):
   margins[np.arange(num_train), y] = 0
   # 计算损失
   loss += np.sum(margins) / num_train
-  loss += 0.5 * reg * np.sum(W * W)
+  loss += reg * np.sum(W * W)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -107,7 +107,7 @@ def svm_loss_vectorized(W, X, y, reg):
   # 计算梯度
   dW = np.dot(X.T, margins)
   dW /= num_train
-  dW += reg * W
+  dW += reg * W * 2
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
